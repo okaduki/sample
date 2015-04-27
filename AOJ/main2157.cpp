@@ -61,17 +61,21 @@ void rot(int& x, int r){
   x = (x + r + 10) % 10;
 }
 
-int dfs(int idx, int d){
+int dfs(int idx){
   if(idx >= K)
 	return 0;
   
-  int diff = (to[idx] - in[idx] + 10) % 10;
-  if(diff == d) return dfs(idx+1, d);
-  
-  int res = 1 + dfs(idx+1, diff);
-  rot(in[idx], d);
-  res = min(res, 1 + dfs(idx+1, (to[idx] - in[idx]+10)%10));
-  rot(in[idx], -d);
+  int diff = to[idx] - in[idx];
+  if(diff == 0) return dfs(idx+1);
+
+  int res = K;
+  int prv[10];
+  REP(i,K) prv[i] = in[i];
+  for(int r=idx;r<K;++r){
+	rot(in[r], diff);
+	res = min(res, 1+dfs(idx+1));
+  }
+  REP(i,K) in[i] = prv[i];
 
   return res;
 }
@@ -84,7 +88,7 @@ int main(){
 	string s1, s2; cin >> s1>> s2;
 	REP(i,K)
 	  in[i] = s1[i] - '0', to[i] = s2[i] - '0';
-	cout << dfs(0, 0) << endl;
+	cout << dfs(0) << endl;
   }
   
   return 0;
