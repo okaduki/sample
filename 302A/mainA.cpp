@@ -56,7 +56,7 @@ const double EPS = 1e-10;
 const double PI  = acos(-1.0);
 
 int as[501];
-int dp[2][501][501];
+int dp[501][501];
 int N, M, B, MOD;
 
 int main(){
@@ -66,26 +66,18 @@ int main(){
   cin >> N >> M >> B >> MOD;
   REP(i,N) cin >> as[i];
   sort(as, as+N);
-  fill((int*)dp, (int*)dp+2*501*501, 0);
+  fill((int*)dp, (int*)dp+501*501, 0);
 
-  int crt = 0, nxt = 1;
-  dp[crt][0][0] = 1;
-  for(int i=0;i<N;++i){
-	for(int x=0;x<=B;++x)
-	  for(int s=0;s<=M;++s)
-		dp[nxt][x][s] = dp[crt][x][s];
+  // dp[s][x] := v_0+...+v_i = s, as[0]*v_0+...+as[i]*v_i = x
+  dp[0][0] = 1;
+  for(int i=0;i<N;++i)
+	for(int s=1;s<=M;++s)
+	  for(int x=as[i];x<=B;++x)
+		dp[s][x] += dp[s-1][x-as[i]], dp[s][x] %= MOD;
 
-	for(int x=0;x+as[i]<=B;++x){
-	  for(int s=0;s+1<=M;++s){
-		dp[nxt][x+as[i]][s+1] = (dp[nxt][x+as[i]][s+1] + dp[crt][x][s]) % MOD;
-	  }
-	}
-	swap(crt, nxt);
-  }
-
-  LL ans = 0;
+  int ans = 0;
   REP(x,B+1)
-  ans = (ans + dp[crt][x][M]) % MOD;
+	ans = (ans + dp[M][x]) % MOD;
   cout << ans << endl;
   
   return 0;
