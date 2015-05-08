@@ -56,35 +56,20 @@ const double EPS = 1e-10;
 const double PI  = acos(-1.0);
 const int INF = 1e8;
 
-struct Edge{
-  int to, cost;
+VI G[3001];
+int dist[3001][3001];
+void bfs(int idx){
+  fill(dist[idx], dist[idx]+3001, INF);
+  queue<int> q;
+  dist[idx][idx] = 0;
+  q.push(idx);
 
-  Edge(int t, int c): to(t), cost(c)
-  {}
-  bool operator>(const Edge& rhs) const{
-	return cost > rhs.cost;
-  }
-};
-typedef vector< vector<Edge> > Graph;
-
-void Dijkstra(const Graph& edges, vector<int>& d, VI& prv, int s){
-  const int V = edges.size();
-  priority_queue<PII, vector<PII>, greater<PII> > pq;
-  fill(d.begin(), d.end(), INF);
-  d[s] = 0;
-  prv[s] = -1;
-  pq.push(MP(0,s));
-
-  while(!pq.empty()){
-	PII pii = pq.top(); pq.pop();
-	int v = pii.second;
-	if(d[v] < pii.first) continue;
-	for(int i=0;i<edges[v].size();++i){
-	  const Edge& e = edges[v][i];
-	  if(d[e.to] > d[v] + e.cost){
-		d[e.to] = d[v] + e.cost;
-		prv[e.to] = v;
-		pq.push(MP(d[e.to], e.to));
+  while(!q.empty()){
+	int node = q.front(); q.pop();
+	for(int to: G[node]){
+	  if(dist[idx][to] > dist[idx][node]+1){
+		dist[idx][to] = dist[idx][node] + 1;
+		q.push(to);
 	  }
 	}
   }
@@ -96,44 +81,33 @@ int main(){
   ios_base::sync_with_stdio(false);
 
   int N, M; cin >> N >> M;
-  Graph G(N+1);
   REP(i,M){
 	int a, b;
 	cin >> a >> b;
-	G[a].PB(Edge(b,1));
-	G[b].PB(Edge(a,1));
+	G[a].PB(b);
+	G[b].PB(a);
   }
 
   int s1, t1, l1, s2, t2, l2;
   cin >> s1 >> t1 >> l1 >> s2 >> t2 >> l2;
 
-  VI dist1(N+1), prv1(N+1);
-  Dijkstra(G, dist1, prv1, s1);  
-  VI dist1_(N+1), prv1_(N+1);
-  Dijkstra(G, dist1_, prv1_, t1);  
-
-  VI dist2(N+1), prv2(N+1);
-  Dijkstra(G, dist2, prv2, s2);
-  VI dist3(N+1), prv3(N+1);
-  Dijkstra(G, dist3, prv3, t2);
-  if(dist1[t1] > l1 || dist2[t2] > l2){
+  for(int u=1;u<=N;++u)
+	bfs(u);
+  if(dist[s1][t1] > l1 || dist[s2][t2] > l2){
 	cout << -1 <<endl;
 	return 0;
   }
 
-  int ans = M - dist1[t1] - dist2[t2];
+  int ans = M - dist[s1][t1] - dist[s2][t2];
   for(int u=1;u<=N;++u){
 	for(int v=1;v<=N;++v){
-	  int s1u = dist1[u];
-	  int s2u = dist2[u];
-	  int vt1 = dist1_[v];
-	  int vt2 = dist3[v];
+	  int suvt1 = min(dist[s1][u]+dist[u][v]+dist[v][t1],
+					  dist[s1][v]+dist[v][u]+dist[u][t1]);
+	  int suvt2 = min(dist[s2][u]+dist[u][v]+dist[v][t2],
+					  dist[s2][v]+dist[v][u]+dist[u][t2]);
 
-	  int uv = min(abs(dist1[v] - dist1[u]), abs(dist2[v]-dist2[u]));
-	  if(s1u+uv+vt1 <= l1 && s2u+uv+vt2 <= l2){
-		ans = max(ans, M - (s1u+s2u+uv+vt1+vt2));
-		//		cout << u<<"->"<<v<<": "<<M - (s1u+s2u+uv+vt1+vt2) << endl;
-	  }
+	  if(suvt1 <= l1 && suvt2 <= l2)
+		ans = max(ans, M - (suvt1 + suvt2 - dist[u][v]));
 	}
   }
 
@@ -141,13 +115,3 @@ int main(){
   
   return 0;
 }
-
-
-
-
-
-
-
-
-
-
